@@ -12,7 +12,7 @@ public final class App {
         useRequestLoggingJettyServer();
 
         get("/", (q, a) -> {
-            return "Henlo";
+            return "Henlo " + q.ip();
         });
     }
 }

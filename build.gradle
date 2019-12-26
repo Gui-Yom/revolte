@@ -32,7 +32,7 @@ application {
 }
 
 shadowJar {
-    archiveFileName = "vlcj-terminal.jar"
+    archiveFileName = "revolte.jar"
     manifest {
         attributes "Main-Class": mainClassName
     }
