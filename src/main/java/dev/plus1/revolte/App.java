@@ -37,14 +37,9 @@ public final class App {
 
         post("/messenger-wh", (q, a) -> {
 
-            WebhookPost data = gson.fromJson(a.body(), WebhookPost.class);
-            if (data.getObject().equals("page")) {
-                log.debug(a.body());
-                a.status(200);
-                return "EVENT_RECEIVED";
-            }
-            halt(404);
-            return null;
+            log.debug(a.body());
+            a.status(200);
+            return "EVENT_RECEIVED";
         });
     }
 }
