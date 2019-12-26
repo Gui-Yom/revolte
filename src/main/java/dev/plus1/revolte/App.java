@@ -37,7 +37,7 @@ public final class App {
 
         post("/messenger-wh", (q, a) -> {
 
-            log.info(a.body());
+            log.info(q.body());
             a.status(200);
             return "EVENT_RECEIVED";
         });
