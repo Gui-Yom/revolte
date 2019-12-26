@@ -24,6 +24,9 @@ public final class App {
         port(Integer.parseInt(System.getenv("PORT")));
         useRequestLoggingJettyServer();
 
+        staticFileLocation("/public");
+        staticFiles.expireTime(300);
+
         get("/", (q, a) -> {
             Map<String, String> model = new HashMap<>();
             model.put("ip", q.ip());
