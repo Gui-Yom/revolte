@@ -6,6 +6,7 @@ module revolte {
     requires org.eclipse.jetty.util;
     requires com.google.gson;
     requires lombok;
+    requires spark.template.thymeleaf;
 
     opens dev.plus1.revolte.data to com.google.gson;
 }

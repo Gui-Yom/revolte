@@ -6,6 +6,11 @@ import dev.plus1.revolte.data.MessageEvent;
 import dev.plus1.revolte.data.WebhookPost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import spark.ModelAndView;
+import spark.template.thymeleaf.ThymeleafTemplateEngine;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static dev.plus1.revolte.SparkUtils.useRequestLoggingJettyServer;
 import static spark.Spark.*;
@@ -18,6 +23,12 @@ public final class App {
     public static void main(String[] args) {
         port(Integer.parseInt(System.getenv("PORT")));
         useRequestLoggingJettyServer();
+
+        get("/", (q, a) -> {
+            Map<String, String> model = new HashMap<>();
+            model.put("ip", q.ip());
+            return new ModelAndView(model, "index");
+        }, new ThymeleafTemplateEngine());
 
         get("/messenger-wh", (q, a) -> {
 
