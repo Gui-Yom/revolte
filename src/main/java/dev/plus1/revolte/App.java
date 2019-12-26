@@ -1,9 +1,11 @@
 package dev.plus1.revolte;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import dev.plus1.revolte.data.MessageEvent;
+import dev.plus1.revolte.data.WebhookPost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
 
 import static dev.plus1.revolte.SparkUtils.useRequestLoggingJettyServer;
 import static spark.Spark.*;
@@ -37,9 +39,19 @@ public final class App {
 
         post("/messenger-wh", (q, a) -> {
 
-            log.info(q.body());
-            a.status(200);
-            return "EVENT_RECEIVED";
+            if (q.body() != null) {
+                WebhookPost<MessageEvent> body = gson.fromJson(q.body(), new TypeToken<WebhookPost<MessageEvent>>() {}.getType());
+                if (body.getObject().equals("page")) {
+                    for (MessageEvent e : body.getEntry()) {
+                        for (MessageEvent.MessageUnit unit : e.getMessaging())
+                            log.info("Message from {} : {}", unit.getSender().getId(), unit.getMessage().getText());
+                    }
+                    a.status(200);
+                    return "EVENT_RECEIVED";
+                }
+            }
+            halt(404);
+            return null;
         });
     }
 }

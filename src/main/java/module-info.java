@@ -7,5 +7,5 @@ module revolte {
     requires com.google.gson;
     requires lombok;
 
-    opens dev.plus1.revolte to com.google.gson;
+    opens dev.plus1.revolte.data to com.google.gson;
 }

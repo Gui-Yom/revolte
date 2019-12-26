@@ -1,12 +1,12 @@
-package dev.plus1.revolte;
+package dev.plus1.revolte.data;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class WebhookPost {
+public class WebhookPost<T> {
 
     private String object;
-    private WebhookEvent[] entry;
+    private T[] entry;
 }
