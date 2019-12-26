@@ -3,6 +3,7 @@ package dev.plus1.revolte;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 import static dev.plus1.revolte.SparkUtils.useRequestLoggingJettyServer;
 import static spark.Spark.*;
@@ -13,7 +14,6 @@ public final class App {
     private static final Gson gson = new Gson();
 
     public static void main(String[] args) {
-
         port(Integer.parseInt(System.getenv("PORT")));
         useRequestLoggingJettyServer();
 
@@ -37,7 +37,7 @@ public final class App {
 
         post("/messenger-wh", (q, a) -> {
 
-            log.debug(a.body());
+            log.info(a.body());
             a.status(200);
             return "EVENT_RECEIVED";
         });
