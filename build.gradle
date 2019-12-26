@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id 'application'
+    id "com.github.johnrengelman.shadow" version "5.2.0"
+    id "com.dua3.gradle.jpms" version "1.0-BETA5"
+}
+
+group "com.github.LimeiloN"
+version "2.0.0"
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.slf4j:slf4j-api:1.7.30"
+    runtimeOnly "org.slf4j:slf4j-simple:1.7.30"
+
+    implementation "com.sparkjava:spark-core:2.9.1"
+    //implementation "com.sparkjava:spark-debug-tools:0.5"
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+}
+
+application {
+    mainClassName = "dev.plus1.revolte.App"
+}
+
+shadowJar {
+    archiveFileName = "vlcj-terminal.jar"
+    manifest {
+        attributes "Main-Class": mainClassName
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jigsaw {
+    testLibraryModule = 'org.junit.jupiter.api'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
