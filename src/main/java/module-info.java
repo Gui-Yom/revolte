@@ -7,6 +7,7 @@ module revolte {
     requires com.google.gson;
     requires lombok;
     requires spark.template.thymeleaf;
+    requires okhttp3;
 
     opens dev.plus1.messenger.webhook to com.google.gson;
 }

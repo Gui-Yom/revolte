@@ -11,7 +11,6 @@ import spark.template.thymeleaf.ThymeleafTemplateEngine;
 import java.util.HashMap;
 import java.util.Map;
 
-import static dev.plus1.revolte.SparkUtils.useRequestLoggingJettyServer;
 import static spark.Spark.*;
 
 public final class App {
@@ -21,7 +20,7 @@ public final class App {
 
     public static void main(String[] args) {
         port(Integer.parseInt(System.getenv("PORT")));
-        useRequestLoggingJettyServer();
+        //useRequestLoggingJettyServer();
 
         staticFileLocation("/public");
         staticFiles.expireTime(300);
@@ -52,10 +51,12 @@ public final class App {
 
         post("/messenger-wh", (q, a) -> {
 
+            log.info(q.body());
             a.status(200);
             for (Event e : Messenger.handleWebhook(q.body())) {
 
-                log.info("{}", e);
+                log.info(e.toString());
+                Messenger.postSenderAction(Messenger.SenderAction.MARK_SEEN, e.getSender());
             }
             return null;
         });
