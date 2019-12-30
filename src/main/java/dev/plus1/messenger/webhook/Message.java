@@ -37,7 +37,7 @@ public class Message {
                 data.setQuickReplyPayload(tree.get("quick_reply").getAsJsonObject().get("payload").getAsString());
             else if (tree.has("attachments")) {
                 List<Attachment> attachments = new ArrayList<>();
-                tree.get("attachments").getAsJsonArray().forEach(elem -> ctx.deserialize(elem, Attachment.class));
+                tree.get("attachments").getAsJsonArray().forEach(elem -> attachments.add(ctx.deserialize(elem, Attachment.class)));
                 data.setAttachments(attachments);
             }
 
