@@ -1,9 +1,8 @@
 package dev.plus1.revolte;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import dev.plus1.revolte.data.MessageEvent;
-import dev.plus1.revolte.data.WebhookPost;
+import dev.plus1.messenger.Messenger;
+import dev.plus1.messenger.webhook.Event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.ModelAndView;
@@ -28,7 +27,7 @@ public final class App {
         staticFiles.expireTime(300);
 
         get("/", (q, a) -> {
-            Map<String, String> model = new HashMap<>();
+            Map<Object, Object> model = new HashMap<>();
             model.put("ip", q.ip());
             return new ModelAndView(model, "index");
         }, new ThymeleafTemplateEngine());
@@ -53,18 +52,11 @@ public final class App {
 
         post("/messenger-wh", (q, a) -> {
 
-            if (q.body() != null) {
-                WebhookPost<MessageEvent> body = gson.fromJson(q.body(), new TypeToken<WebhookPost<MessageEvent>>() {}.getType());
-                if (body.getObject().equals("page")) {
-                    for (MessageEvent e : body.getEntry()) {
-                        for (MessageEvent.MessageUnit unit : e.getMessaging())
-                            log.info("Message from {} : {}", unit.getSender().getId(), unit.getMessage().getText());
-                    }
-                    a.status(200);
-                    return "EVENT_RECEIVED";
-                }
+            a.status(200);
+            for (Event e : Messenger.handleWebhook(q.body())) {
+
+                log.info("{}", e);
             }
-            halt(404);
             return null;
         });
     }

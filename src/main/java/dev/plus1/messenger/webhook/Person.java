@@ -1,4 +1,4 @@
-package dev.plus1.revolte.data;
+package dev.plus1.messenger.webhook;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;

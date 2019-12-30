@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
   <title>Révolté</title>
   <meta content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
 </head>
 <body>
-<div id="content"><p id="uid"></p></div>
+<div id="content">
+  <!--/*@thymesVar id="ip" type="java.lang.String"*/-->
+  <p th:text="${ip}"></p>
+  <br/>
+  <p id="uid"></p>
+</div>
 <script>
     (function (d, s, id) {
         var js, fjs = d.getElementsByTagName(s)[0];
@@ -23,9 +28,9 @@
             "2608749976019869",
             function success(context) {
                 // Display the webview in messenger
-                document.getElementById("uid").textContent = context.psid;
+                document.getElementById("uid").textContent = "psid : " + context.psid;
             }, function error(err) {
-                document.getElementById("uid").textContent = err;
+                document.getElementById("uid").textContent = "error : " + err;
             });
     };
 </script>

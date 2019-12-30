@@ -8,5 +8,5 @@ module revolte {
     requires lombok;
     requires spark.template.thymeleaf;
 
-    opens dev.plus1.revolte.data to com.google.gson;
+    opens dev.plus1.messenger.webhook to com.google.gson;
 }
