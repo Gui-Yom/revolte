@@ -24,9 +24,11 @@ public class Postback {
 
             data.setTitle(tree.get("title").getAsString());
             data.setPayload(tree.get("payload").getAsString());
-            data.setRef(tree.get("referral").getAsJsonObject().get("ref").getAsString());
-            data.setSource(tree.get("referral").getAsJsonObject().get("source").getAsString());
-            data.setType(tree.get("referral").getAsJsonObject().get("type").getAsString());
+            if (tree.has("referral")) {
+                data.setRef(tree.get("referral").getAsJsonObject().get("ref").getAsString());
+                data.setSource(tree.get("referral").getAsJsonObject().get("source").getAsString());
+                data.setType(tree.get("referral").getAsJsonObject().get("type").getAsString());
+            }
 
             return data;
         };

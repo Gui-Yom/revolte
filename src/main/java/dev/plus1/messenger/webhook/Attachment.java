@@ -18,6 +18,7 @@ public class Attachment {
     private String title;
     private URL url;
     private String coordinates;
+    private long stickerId;
 
     public static JsonDeserializer<Attachment> getDeserializer() {
         return (json, type, ctx) -> {
@@ -31,10 +32,14 @@ public class Attachment {
             else if (data.isFallback()) {
                 data.setTitle(tree.get("title").getAsString());
                 data.setUrl(ctx.deserialize(tree.get("url"), URL.class));
-            } else if (data.isDocument())
-                data.setUrl(ctx.deserialize(tree.get("payload").getAsJsonObject().get("url"), URL.class));
-            else
-                data.setPayload(tree.get("paylaod").getAsString());
+            } else if (data.isDocument()) {
+                final JsonObject payload = tree.get("payload").getAsJsonObject();
+                data.setUrl(ctx.deserialize(payload.get("url"), URL.class));
+                if (payload.has("sticker_id"))
+                    data.setStickerId(payload.get("sticker_id").getAsLong());
+            } else
+                data.setPayload(tree.get("payload").getAsString());
+
 
             return data;
         };

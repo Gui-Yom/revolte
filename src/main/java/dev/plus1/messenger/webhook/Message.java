@@ -19,6 +19,7 @@ public class Message {
     private List<Attachment> attachments;
     private String quickReplyPayload;
     private String replyMid;
+    private long stickerId;
 
     public static JsonDeserializer<Message> getDeserializer() {
         return (json, type, ctx) -> {
@@ -39,6 +40,9 @@ public class Message {
                 tree.get("attachments").getAsJsonArray().forEach(elem -> ctx.deserialize(elem, Attachment.class));
                 data.setAttachments(attachments);
             }
+
+            if (tree.has("sticker_id"))
+                data.setStickerId(tree.get("sticker_id").getAsLong());
 
             return data;
         };
