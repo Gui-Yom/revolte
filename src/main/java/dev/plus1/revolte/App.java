@@ -35,15 +35,11 @@ public final class App {
 
             final String mode = q.queryParams("hub.mode");
             final String token = q.queryParams("hub.verify_token");
-            if (mode != null && token != null) {
-                final String VERIFY_TOKEN = System.getenv("WEBHOOK_VERIFY_TOKEN");
-
-                if (mode.equals("subscribe") && token.equals(VERIFY_TOKEN)) {
-
-                    log.info("Webhook has been verified !");
-                    a.status(200);
-                    return q.queryParams("hub.challenge");
-                }
+            final String challenge = q.queryParams("hub.challenge");
+            if (Messenger.verifyWebhook(mode, token, challenge)) {
+                log.info("Webhook has been verified !");
+                a.status(200);
+                return challenge;
             }
             halt(403);
             return "";
@@ -53,9 +49,13 @@ public final class App {
 
             log.info(q.body());
             a.status(200);
-            for (Event e : Messenger.handleWebhook(q.body())) {
+            for (Event e : Messenger.handleWebhook(q.body()).getEntry()) {
 
                 log.info(e.toString());
+                // If this is the start of a conversation
+                if (e.getEventType() == Event.EventType.POSTBACK && e.getPostback().getPayload().equals("Commencer")) {
+                    Messenger.postMessage("Invoque moi dans une conversation de groupe pour commencer !", e.getSender());
+                }
                 Messenger.postSenderAction(Messenger.SenderAction.MARK_SEEN, e.getSender());
             }
             return "";
