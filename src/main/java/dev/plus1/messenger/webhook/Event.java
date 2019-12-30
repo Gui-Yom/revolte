@@ -30,11 +30,11 @@ public class Event {
             data.setSender(ctx.deserialize(messaging.get("sender"), Person.class));
             data.setRecipient(ctx.deserialize(messaging.get("recipient"), Person.class));
             data.setTimestamp(messaging.get("timestamp").getAsLong());
-            if (tree.has("message")) {
-                data.setMessage(ctx.deserialize(tree.get("message"), Message.class));
+            if (messaging.has("message")) {
+                data.setMessage(ctx.deserialize(messaging.get("message"), Message.class));
                 data.setEventType(EventType.MESSAGES);
-            } else if (tree.has("postback")) {
-                data.setPostback(ctx.deserialize(tree.get("postback"), Postback.class));
+            } else if (messaging.has("postback")) {
+                data.setPostback(ctx.deserialize(messaging.get("postback"), Postback.class));
                 data.setEventType(EventType.POSTBACK);
             }
             return data;
