@@ -46,7 +46,7 @@ public final class App {
                 }
             }
             halt(403);
-            return null;
+            return "";
         });
 
         post("/messenger-wh", (q, a) -> {
@@ -58,7 +58,7 @@ public final class App {
                 log.info(e.toString());
                 Messenger.postSenderAction(Messenger.SenderAction.MARK_SEEN, e.getSender());
             }
-            return null;
+            return "";
         });
     }
 }
