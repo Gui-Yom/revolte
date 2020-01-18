@@ -58,6 +58,10 @@
             }
         };
 
+        m.route(document.body, "/welcome", {
+            "/welcome": Welcome
+        });
+
         MessengerExtensions.getContext(
             "2608749976019869",
             function success(context) {
@@ -65,13 +69,10 @@
                 psid = context.psid;
                 tid = context.tid;
                 ttype = context.thread_type;
+                m.redraw();
             }, function error(err) {
                 document.getElementById("uid").textContent = "error : " + err;
             });
-
-        m.route(document.body, "/welcome", {
-            "/welcome": Welcome
-        })
     };
 </script>
 </body>
