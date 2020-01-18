@@ -1,6 +1,8 @@
 package dev.plus1.revolte;
 
+import ch.qos.logback.classic.Level;
 import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import dev.plus1.messenger.Messenger;
 import dev.plus1.messenger.webhook.Event;
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import spark.ModelAndView;
 import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static spark.Spark.*;
@@ -17,8 +20,17 @@ public final class App {
 
     private static final Logger log = LoggerFactory.getLogger(App.class);
     private static final Gson gson = new Gson();
+    private static List<Revolte> games;
 
     public static void main(String[] args) {
+
+        // Set log level to info
+        ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.INFO);
+
+        DBEnv.setup();
+
+        games = Revolte.retrieveAll();
+
         port(Integer.parseInt(System.getenv("PORT")));
         //useRequestLoggingJettyServer();
 
@@ -58,6 +70,12 @@ public final class App {
                 }
                 Messenger.postSenderAction(Messenger.SenderAction.MARK_SEEN, e.getSender());
             }
+            return "";
+        });
+
+        post("/game", (q, a) -> {
+            a.status(200);
+            games.add(new Revolte(JsonParser.parseString(q.body()).getAsJsonObject().get("tid").getAsString()));
             return "";
         });
     }

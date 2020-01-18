@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="fr">
 <head>
   <title>Révolté</title>
   <meta content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
 </head>
 <body>
-<div id="content">
-  <!--/*@thymesVar id="ip" type="java.lang.String"*/-->
-  <p th:text="${ip}"></p>
-  <br/>
-  <p id="uid"></p>
-</div>
-<script>
+
+<script src="https://unpkg.com/mithril/mithril.js"></script>
+<script src="https://connect.facebook.net/fr_FR/messenger.Extensions.js"></script>
+<script type="text/javascript">
+    <!--
     (function (d, s, id) {
         var js, fjs = d.getElementsByTagName(s)[0];
         if (d.getElementById(id)) {
@@ -22,16 +20,58 @@
         js.src = "//connect.facebook.net/en_US/messenger.Extensions.js";
         fjs.parentNode.insertBefore(js, fjs);
     }(document, 'script', 'Messenger'));
+    //-->
 
     window.extAsyncInit = function () {
+
+        let psid = "unknown";
+        let tid = "unknown";
+        let ttype = "unknown";
+        let gamestarted = false;
+
+        let newgame = function () {
+            m.request({
+                method: "POST",
+                url: "//" + location.host + "/game",
+                body: {tid: tid}
+            }).then(function (data) {
+
+            })
+        };
+
+        let Welcome = {
+            view: function () {
+                return m("root", [
+                    m("h3", {class: "title"}, "Hello " + psid),
+                    m("p", {}, "This webview was opened from thread: " + tid + ", type: " + ttype),
+                    m("button", {onclick: newgame}, "New game"),
+                    m("button", {
+                        onclick: function () {
+                            MessengerExtensions.requestCloseBrowser(function success() {
+
+                            }, function error(err) {
+
+                            });
+                        }
+                    }, "Exit")
+                ])
+            }
+        };
+
         MessengerExtensions.getContext(
             "2608749976019869",
             function success(context) {
                 // Display the webview in messenger
-                document.getElementById("uid").textContent = "psid : " + context.psid;
+                psid = context.psid;
+                tid = context.tid;
+                ttype = context.thread_type;
             }, function error(err) {
                 document.getElementById("uid").textContent = "error : " + err;
             });
+
+        m.route(document.body, "/welcome", {
+            "/welcome": Welcome
+        })
     };
 </script>
 </body>
