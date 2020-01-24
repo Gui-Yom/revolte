@@ -45,6 +45,8 @@ public final class App {
         port(Integer.parseInt(System.getenv("PORT")));
         //useRequestLoggingJettyServer();
 
+        webSocket("/game", GameWebSocket.class);
+
         get("/messenger-wh", (q, a) -> {
 
             final String mode = q.queryParams("hub.mode");
@@ -74,8 +76,6 @@ public final class App {
             }
             return "";
         });
-
-        webSocket("/game", GameWebSocket.class);
     }
 
     static String error(Response a, int code, String message) {
