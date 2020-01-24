@@ -26,7 +26,7 @@ public final class Revolte {
     private Phase phase;
     private Map<Phase, Duration> phasesDuration;
     private Instant phaseEnd;
-    private Timer timer;
+    private transient Timer timer;
 
     /**
      * Create a new game and start it.

@@ -6,12 +6,14 @@ import com.google.gson.GsonBuilder;
 import dev.plus1.messenger.Messenger;
 import dev.plus1.messenger.webhook.Event;
 import dev.plus1.revolte.data.DurationGsonAdapter;
+import dev.plus1.revolte.data.InstantGsonAdapter;
 import dev.plus1.revolte.db.DBEnv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Response;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,6 +24,7 @@ public final class App {
     public static final boolean USE_DB = false;
     static final Gson gson = new GsonBuilder()
                                      .registerTypeAdapter(Duration.class, new DurationGsonAdapter())
+                                     .registerTypeAdapter(Instant.class, new InstantGsonAdapter())
                                      .create();
     private static final Logger log = LoggerFactory.getLogger(App.class);
     private static Map<String, Revolte> games;

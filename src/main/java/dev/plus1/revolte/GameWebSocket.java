@@ -69,6 +69,13 @@ public class GameWebSocket {
                     session.getRemote().sendString("ok");
                 }
                 break;
+            case "game_info?":
+                game = App.getGames().get(params[1]);
+                if (game != null)
+                    session.getRemote().sendString(App.gson.toJson(game));
+                else
+                    session.getRemote().sendString("error:no_game_with_this_id");
+                break;
         }
     }
 }
