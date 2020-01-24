@@ -6,7 +6,7 @@ module revolte {
     requires spark.core;
     requires org.eclipse.jetty.server;
     requires org.eclipse.jetty.util;
-    requires spark.template.thymeleaf;
+    requires org.eclipse.jetty.websocket.api;
 
     requires lombok;
     requires com.google.gson;

@@ -1,69 +1,76 @@
 package dev.plus1.revolte;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
+@NoArgsConstructor
 public final class Revolte {
 
     private static final Logger log = LoggerFactory.getLogger(Revolte.class);
 
-    private long gameId;
+    /**
+     * Serve as key
+     */
     private String threadId;
-    private List<Player> players;
-    private int turn;
+    private Map<String, Player> players;
+    private int day;
+    private Phase phase;
+    private Map<Phase, Duration> phasesDuration;
+    private Instant phaseEnd;
+    private Timer timer;
 
-    public Revolte(String threadId) {
+    /**
+     * Create a new game and start it.
+     *
+     * @param threadId
+     * @param phasesDuration
+     */
+    public Revolte(String threadId, Map<Phase, Duration> phasesDuration) {
         this.threadId = threadId;
-        this.turn = 0;
-        this.players = new ArrayList<>();
-        this.gameId = persist();
+        this.day = 0;
+        this.phase = null;
+        this.phasesDuration = phasesDuration;
+        this.players = new ConcurrentHashMap<>();
+
+        startJoinPhase();
     }
 
-    private Revolte() {
-        this.players = new ArrayList<>();
-    }
-
-    static List<Revolte> retrieveAll() {
-        try (Connection conn = DBEnv.getConnection()) {
-
-            List<Revolte> games = new ArrayList<>();
-            try (Statement st = conn.createStatement();
-                 ResultSet rs = st.executeQuery("select * from games")) {
-                while (rs.next()) {
-                    Revolte game = new Revolte();
-                    game.gameId = rs.getLong(1);
-                    game.threadId = rs.getString(2);
-                    game.turn = rs.getInt(3);
-                    games.add(game);
-                }
+    public void nextPhase(Phase phase) {
+        this.phase = phase;
+        this.phaseEnd = Instant.now().plus(phasesDuration.get(phase));
+        this.timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                // End of phase
+                nextPhase(phase.next());
             }
-            if (!games.isEmpty())
-                try (PreparedStatement pst = conn.prepareStatement("select * from players where gameid = ?")) {
-                    for (Revolte game : games) {
-                        pst.setLong(1, game.gameId);
-                        try (ResultSet rs = pst.executeQuery()) {
-                            while (rs.next()) {
-                                game.players.add(Player.fromQueryResult(rs));
-                            }
-                        }
-                    }
-                }
+        }, Date.from(phaseEnd));
+    }
 
-            return games;
-        } catch (SQLException e) {
-            log.error("Cannot open connection to database.", e);
-        }
-        return null;
+    public void startJoinPhase() {
+        this.phase = Phase.JOIN;
+        this.phaseEnd = Instant.now().plus(phasesDuration.get(phase));
+        this.timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                // End of enroll phase
+                distributeRoles();
+                nextPhase(Phase.JOIN.next());
+            }
+        }, Date.from(phaseEnd));
     }
 
     public void addPlayer(Player player) {
-        this.players.add(player);
+        this.players.put(player.getPsid(), player);
     }
 
     public void distributeRoles() {
@@ -73,6 +80,8 @@ public final class Revolte {
                 Role.ASSASSIN,
                 Role.REBEL, Role.REBEL, Role.REBEL);
         switch (size) {
+            case 9:
+                break;
             case 10:
                 roles.remove(Role.CITIZEN);
                 roles.add(Role.REBEL);
@@ -127,9 +136,8 @@ public final class Revolte {
         Random rng = new Random();
         Collections.shuffle(roles, rng);
         AtomicInteger max = new AtomicInteger(roles.size());
-        for (Player p : players) {
-            p.setRole(roles.remove(rng.nextInt(max.get())));
-            max.decrementAndGet();
+        for (Player p : players.values()) {
+            p.setRole(roles.remove(rng.nextInt(max.getAndDecrement())));
 
             if (p.getRole() == Role.KING) {
                 p.addHealth(size < 14 ? 2 : 3);
@@ -138,22 +146,5 @@ public final class Revolte {
             }
         }
         log.info("Distributed roles !");
-    }
-
-    long persist() {
-        try {
-            Connection conn = DBEnv.getConnection();
-            try (PreparedStatement pst = conn.prepareStatement("insert into games(threadid, turn) values (?, ?)", new String[] { "gameid" })) {
-                pst.setString(1, threadId);
-                pst.setInt(2, turn);
-                pst.executeQuery();
-                try (ResultSet rs = pst.getGeneratedKeys()) {
-                    return rs.getLong(1);
-                }
-            }
-        } catch (SQLException e) {
-            log.error("Cannot open connection to database.", e);
-        }
-        return -1;
     }
 }

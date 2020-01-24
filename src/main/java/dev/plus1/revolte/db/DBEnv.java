@@ -1,4 +1,4 @@
-package dev.plus1.revolte;
+package dev.plus1.revolte.db;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

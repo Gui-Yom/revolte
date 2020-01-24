@@ -20,6 +20,7 @@ public final class Messenger {
 
     private static final String PAGE_ACCESS_TOKEN = System.getenv("PAGE_ACCESS_TOKEN");
     private static final String WEBHOOK_VERIFY_TOKEN = System.getenv("WEBHOOK_VERIFY_TOKEN");
+    private static final String APP_SECRET = System.getenv("APP_SECRET");
 
     static {
         gson = new GsonBuilder()

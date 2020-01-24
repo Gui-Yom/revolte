@@ -2,46 +2,45 @@ package dev.plus1.revolte;
 
 import ch.qos.logback.classic.Level;
 import com.google.gson.Gson;
-import com.google.gson.JsonParser;
+import com.google.gson.GsonBuilder;
 import dev.plus1.messenger.Messenger;
 import dev.plus1.messenger.webhook.Event;
+import dev.plus1.revolte.data.DurationGsonAdapter;
+import dev.plus1.revolte.db.DBEnv;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spark.ModelAndView;
-import spark.template.thymeleaf.ThymeleafTemplateEngine;
+import spark.Response;
 
-import java.util.HashMap;
-import java.util.List;
+import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static spark.Spark.*;
 
 public final class App {
 
+    public static final boolean USE_DB = false;
+    static final Gson gson = new GsonBuilder()
+                                     .registerTypeAdapter(Duration.class, new DurationGsonAdapter())
+                                     .create();
     private static final Logger log = LoggerFactory.getLogger(App.class);
-    private static final Gson gson = new Gson();
-    private static List<Revolte> games;
+    private static Map<String, Revolte> games;
 
     public static void main(String[] args) {
 
         // Set log level to info
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger("ROOT")).setLevel(Level.INFO);
 
-        DBEnv.setup();
-
-        games = Revolte.retrieveAll();
+        if (USE_DB) {
+            DBEnv.setup();
+            // TODO reimplement db persistence
+            //games = RevolteDAO.getAll();
+        } else {
+            games = new ConcurrentHashMap<>();
+        }
 
         port(Integer.parseInt(System.getenv("PORT")));
         //useRequestLoggingJettyServer();
-
-        staticFileLocation("/public");
-        staticFiles.expireTime(300);
-
-        get("/", (q, a) -> {
-            Map<Object, Object> model = new HashMap<>();
-            model.put("ip", q.ip());
-            return new ModelAndView(model, "index");
-        }, new ThymeleafTemplateEngine());
 
         get("/messenger-wh", (q, a) -> {
 
@@ -73,10 +72,16 @@ public final class App {
             return "";
         });
 
-        post("/game", (q, a) -> {
-            a.status(200);
-            games.add(new Revolte(JsonParser.parseString(q.body()).getAsJsonObject().get("tid").getAsString()));
-            return "";
-        });
+        webSocket("/game", GameWebSocket.class);
+    }
+
+    static String error(Response a, int code, String message) {
+        a.status(code);
+        a.type("text/plain");
+        return code + ": " + message;
+    }
+
+    static Map<String, Revolte> getGames() {
+        return games;
     }
 }
