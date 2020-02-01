@@ -22,12 +22,13 @@ import static spark.Spark.*;
 public final class App {
 
     public static final boolean USE_DB = false;
-    static final Gson gson = new GsonBuilder()
-                                     .registerTypeAdapter(Duration.class, new DurationGsonAdapter())
-                                     .registerTypeAdapter(Instant.class, new InstantGsonAdapter())
-                                     .create();
+    public static final Gson gson = new GsonBuilder()
+                                            .registerTypeAdapter(Duration.class, new DurationGsonAdapter())
+                                            .registerTypeAdapter(Instant.class, new InstantGsonAdapter())
+                                            .create();
     private static final Logger log = LoggerFactory.getLogger(App.class);
     private static Map<String, Revolte> games;
+    private static GameWebSocket networkEngine;
 
     public static void main(String[] args) {
 
@@ -45,7 +46,24 @@ public final class App {
         port(Integer.parseInt(System.getenv("PORT")));
         //useRequestLoggingJettyServer();
 
-        webSocket("/game", GameWebSocket.class);
+        webSocket("/game", networkEngine = new GameWebSocket());
+
+        get("/debug/connections", (q, a) -> {
+            StringBuilder sb = new StringBuilder();
+            networkEngine.getSessions().forEach((k, v) -> sb.append(v.getRemoteAddress()).append("\n"));
+            return sb.toString();
+        });
+
+        get("/debug/games", (q, a) -> {
+            StringBuilder sb = new StringBuilder();
+            games.forEach((k, v) -> sb.append(k).append("\n"));
+            return sb.toString();
+        });
+
+        get("/debug/cleargames", (q, a) -> {
+            games.clear();
+            return "ok";
+        });
 
         get("/messenger-wh", (q, a) -> {
 
@@ -84,7 +102,11 @@ public final class App {
         return code + ": " + message;
     }
 
-    static Map<String, Revolte> getGames() {
+    public static Map<String, Revolte> getGames() {
         return games;
+    }
+
+    public static GameWebSocket getNetworkEngine() {
+        return networkEngine;
     }
 }

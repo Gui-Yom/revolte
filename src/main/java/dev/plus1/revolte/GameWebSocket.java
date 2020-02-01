@@ -2,6 +2,7 @@ package dev.plus1.revolte;
 
 import dev.plus1.revolte.data.NewGame;
 import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
@@ -10,72 +11,101 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @WebSocket
 public class GameWebSocket {
 
+    public static final char SEP = '|';
     private static final Logger log = LoggerFactory.getLogger(GameWebSocket.class);
-    private final Queue<Session> sessions = new ConcurrentLinkedQueue<>();
+    private final ConcurrentHashMap<String, Session> sessions = new ConcurrentHashMap<>();
+
+    public ConcurrentHashMap<String, Session> getSessions() {
+        return sessions;
+    }
 
     @OnWebSocketConnect
     public void connected(Session session) {
+        if (!session.getUpgradeRequest().getParameterMap().containsKey("viewerId")) {
+            log.error("Bad websocket upgrade request !");
+            session.close(StatusCode.PROTOCOL, "Must specify query parameter : 'viewerId");
+            return;
+        }
         log.info("Websocket client connected : {}", session.getRemoteAddress());
-        sessions.add(session);
+        sessions.put(session.getUpgradeRequest().getParameterMap().get("viewerId").get(0), session);
     }
 
     @OnWebSocketClose
     public void closed(Session session, int statusCode, String reason) {
         log.info("Websocket client closed : {}", session.getRemoteAddress());
-        sessions.remove(session);
+        sessions.remove(session.getUpgradeRequest().getParameterMap().get("viewerId").get(0));
     }
 
     /**
-     * Handle '|' separated values
+     * Frame are '|' separated values
+     * type : e for event
+     * r for request
      *
      * @param session
      * @param message
      * @throws IOException
      */
     @OnWebSocketMessage
-    public void message(Session session, String message) throws IOException {
-        String[] params = message.split("\\|");
-        switch (params[0]) {
+    public void messageText(Session session, String message) throws IOException {
+        String[] params = message.split("\\" + SEP);
+        switch (params[1]) {
             case "game_exists?":
-                session.getRemote().sendString(String.valueOf(App.getGames().containsKey(params[1])));
+                sendResponse(session, params[0], App.getGames().containsKey(params[2]) ? "true" : "false");
                 break;
             case "game_has_player?":
-                Revolte game = App.getGames().get(params[1]);
+                Revolte game = App.getGames().get(params[2]);
                 if (game != null)
-                    session.getRemote().sendString(String.valueOf(game.getPlayers().containsKey(params[2])));
+                    sendResponse(session, params[0], game.getPlayers().containsKey(params[3]) ? "true" : "false");
                 else
-                    session.getRemote().sendString("error:no_game_with_this_id");
+                    sendResponse(session, params[0], "error", "no_game_with_this_id");
                 break;
             case "game_join!":
-                game = App.getGames().get(params[1]);
+                game = App.getGames().get(params[2]);
                 if (game != null) {
-                    game.addPlayer(new Player(params[2]));
-                    session.getRemote().sendString("ok");
+                    game.addPlayer(new Player(params[3]));
+                    sendResponse(session, params[0], "ok");
                 } else
-                    session.getRemote().sendString("error:no_game_with_this_id");
+                    sendResponse(session, params[0], "error", "no_game_with_this_id");
                 break;
             case "game_create!":
-                NewGame data = App.gson.fromJson(params[1], NewGame.class);
+                NewGame data = App.gson.fromJson(params[2], NewGame.class);
                 if (App.getGames().containsKey(data.getThreadId())) {
-                    session.getRemote().sendString("error:game_already_exists");
+                    sendResponse(session, params[0], "error", "game_already_exists");
                 } else {
-                    App.getGames().put(params[1], new Revolte(data.getThreadId(), data.getPhasesDuration()));
-                    session.getRemote().sendString("ok");
+                    App.getGames().put(data.getThreadId(), new Revolte(data.getThreadId(), data.getPhasesDuration()));
+                    sendResponse(session, params[0], "ok");
                 }
                 break;
             case "game_info?":
-                game = App.getGames().get(params[1]);
+                game = App.getGames().get(params[2]);
                 if (game != null)
-                    session.getRemote().sendString(App.gson.toJson(game));
+                    sendResponse(session, params[0], App.gson.toJson(game));
                 else
-                    session.getRemote().sendString("error:no_game_with_this_id");
+                    sendResponse(session, params[0], "error", "no_game_with_this_id");
                 break;
         }
+    }
+
+    public void sendSpecial(String viewerId, String... params) throws IOException {
+        sendFrame(sessions.get(viewerId), 's', params);
+    }
+
+    public void broadcastEvent(String... params) throws IOException {
+        for (Session s : sessions.values())
+            sendFrame(s, 'e', params);
+    }
+
+    private void sendResponse(Session session, String... params) throws IOException {
+        sendFrame(session, 'r', params);
+    }
+
+    private void sendFrame(Session session, char type, String... params) throws IOException {
+        Optional.of(session).orElseThrow().getRemote().sendString(type + SEP + String.join(String.valueOf(SEP), params));
     }
 }
