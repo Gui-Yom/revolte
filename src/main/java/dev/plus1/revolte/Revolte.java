@@ -40,8 +40,10 @@ public final class Revolte {
         this.phase = null;
         this.phasesDuration = phasesDuration;
         this.players = new ConcurrentHashMap<>();
+        this.timer = new Timer();
 
-        startJoinPhase();
+        // TODO game functionnalities are currently disabled
+        //startJoinPhase();
     }
 
     public void nextPhase(Phase phase) {

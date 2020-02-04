@@ -65,6 +65,10 @@ public class GameWebSocket {
                 Revolte game = App.getGames().get(params[2]);
                 if (game != null) {
                     game.addPlayer(new Player(session.getUpgradeRequest().getParameterMap().get("viewerId").get(0)));
+                    for (String k : sessions.keySet()) {
+                        if (game.getPlayers().containsKey(k))
+                            sendEvent(k, "playerJoin!", k);
+                    }
                     sendResponse(session, params[0], "ok");
                 } else
                     sendResponse(session, params[0], "error", "no_game_with_this_id");
