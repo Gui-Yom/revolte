@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 @WebSocket
@@ -54,8 +55,8 @@ public class GameWebSocket {
      */
     @OnWebSocketMessage
     public void messageText(Session session, String message) throws IOException {
-        log.info("Received message : {}", message);
         String[] params = message.split("\\" + SEP);
+        log.info("Received message : {}", Arrays.toString(params));
         switch (params[1]) {
             case "game_exists?":
                 sendResponse(session, params[0], App.getGames().containsKey(params[2]) ? "true" : "false");
@@ -99,19 +100,19 @@ public class GameWebSocket {
     }
 
     public void sendEvent(String viewerId, String... params) throws IOException {
-        sendFrame(sessions.get(viewerId), 'e', params);
+        sendFrame(sessions.get(viewerId), "e", params);
     }
 
     public void broadcastEvent(String... params) throws IOException {
         for (Session s : sessions.values())
-            sendFrame(s, 'e', params);
+            sendFrame(s, "e", params);
     }
 
     private void sendResponse(Session session, String... params) throws IOException {
-        sendFrame(session, 'r', params);
+        sendFrame(session, "r", params);
     }
 
-    private void sendFrame(Session session, char type, String... params) throws IOException {
+    private void sendFrame(Session session, String type, String... params) throws IOException {
         String msg = type + SEP + String.join(String.valueOf(SEP), params);
         log.info("Sending message : {}", msg);
         session.getRemote().sendString(msg);

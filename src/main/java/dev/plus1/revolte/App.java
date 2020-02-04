@@ -50,7 +50,7 @@ public final class App {
 
         get("/debug/connections", (q, a) -> {
             StringBuilder sb = new StringBuilder();
-            networkEngine.getSessions().forEach((k, v) -> sb.append(v.getRemoteAddress()).append("\n"));
+            networkEngine.getSessions().forEach((k, v) -> sb.append(k).append(v.getRemoteAddress()).append("\n"));
             return sb.toString();
         });
 
