@@ -32,7 +32,9 @@ public class GameWebSocket {
             session.close(StatusCode.PROTOCOL, "Must specify query parameter : 'viewerId");
             return;
         }
-        log.info("Websocket client connected : {}", session.getRemoteAddress());
+        log.info("Websocket client connected : {} + {}",
+                session.getRemoteAddress(),
+                session.getUpgradeRequest().getParameterMap().get("viewerId").get(0));
         sessions.put(session.getUpgradeRequest().getParameterMap().get("viewerId").get(0), session);
     }
 
@@ -53,6 +55,7 @@ public class GameWebSocket {
      */
     @OnWebSocketMessage
     public void messageText(Session session, String message) throws IOException {
+        log.info("Received message : {}", message);
         String[] params = message.split("\\" + SEP);
         switch (params[1]) {
             case "game_exists?":
@@ -68,7 +71,7 @@ public class GameWebSocket {
             case "game_join!":
                 game = App.getGames().get(params[2]);
                 if (game != null) {
-                    game.addPlayer(new Player(params[3]));
+                    game.addPlayer(new Player(session.getUpgradeRequest().getParameterMap().get("viewerId").get(0)));
                     sendResponse(session, params[0], "ok");
                 } else
                     sendResponse(session, params[0], "error", "no_game_with_this_id");
