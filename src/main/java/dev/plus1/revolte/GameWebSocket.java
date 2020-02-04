@@ -78,8 +78,12 @@ public class GameWebSocket {
                 if (App.getGames().containsKey(data.getThreadId())) {
                     sendResponse(session, params[0], "error", "game_already_exists");
                 } else {
-                    App.getGames().put(data.getThreadId(), new Revolte(data.getThreadId(), data.getPhasesDuration()));
-                    sendResponse(session, params[0], "ok");
+                    if (data.getDevelopperKey().equals("69420")) {
+                        App.getGames().put(data.getThreadId(), new Revolte(data.getThreadId(), data.getPhasesDuration()));
+                        sendResponse(session, params[0], "ok");
+                    } else {
+                        sendResponse(session, params[0], "error", "Mauvaise clé développeur");
+                    }
                 }
                 break;
             case "game_info?":
@@ -92,8 +96,8 @@ public class GameWebSocket {
         }
     }
 
-    public void sendSpecial(String viewerId, String... params) throws IOException {
-        sendFrame(sessions.get(viewerId), 's', params);
+    public void sendEvent(String viewerId, String... params) throws IOException {
+        sendFrame(sessions.get(viewerId), 'e', params);
     }
 
     public void broadcastEvent(String... params) throws IOException {

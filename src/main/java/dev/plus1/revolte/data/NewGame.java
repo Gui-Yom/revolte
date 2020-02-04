@@ -14,4 +14,5 @@ import java.util.Map;
 public class NewGame {
     private String threadId;
     private Map<Phase, Duration> phasesDuration;
+    private String developperKey;
 }
