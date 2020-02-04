@@ -58,30 +58,23 @@ public class GameWebSocket {
         String[] params = message.split("\\" + SEP);
         log.info("Received message : {}", Arrays.toString(params));
         switch (params[1]) {
-            case "game_exists?":
+            case "gameExists?":
                 sendResponse(session, params[0], App.getGames().containsKey(params[2]) ? "true" : "false");
                 break;
-            case "game_has_player?":
+            case "joinGame!":
                 Revolte game = App.getGames().get(params[2]);
-                if (game != null)
-                    sendResponse(session, params[0], game.getPlayers().containsKey(params[3]) ? "true" : "false");
-                else
-                    sendResponse(session, params[0], "error", "no_game_with_this_id");
-                break;
-            case "game_join!":
-                game = App.getGames().get(params[2]);
                 if (game != null) {
                     game.addPlayer(new Player(session.getUpgradeRequest().getParameterMap().get("viewerId").get(0)));
                     sendResponse(session, params[0], "ok");
                 } else
                     sendResponse(session, params[0], "error", "no_game_with_this_id");
                 break;
-            case "game_create!":
+            case "gameCreate!":
                 NewGame data = App.gson.fromJson(params[2], NewGame.class);
                 if (App.getGames().containsKey(data.getThreadId())) {
                     sendResponse(session, params[0], "error", "game_already_exists");
                 } else {
-                    if (data.getDevelopperKey().equals("69420")) {
+                    if (data.getDeveloperKey().equals("69420")) {
                         App.getGames().put(data.getThreadId(), new Revolte(data.getThreadId(), data.getPhasesDuration()));
                         sendResponse(session, params[0], "ok");
                     } else {
@@ -89,7 +82,7 @@ public class GameWebSocket {
                     }
                 }
                 break;
-            case "game_info?":
+            case "gameInfo?":
                 game = App.getGames().get(params[2]);
                 if (game != null)
                     sendResponse(session, params[0], App.gson.toJson(game));
