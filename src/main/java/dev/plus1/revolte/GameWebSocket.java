@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @WebSocket
@@ -113,6 +112,8 @@ public class GameWebSocket {
     }
 
     private void sendFrame(Session session, char type, String... params) throws IOException {
-        Optional.of(session).orElseThrow().getRemote().sendString(type + SEP + String.join(String.valueOf(SEP), params));
+        String msg = type + SEP + String.join(String.valueOf(SEP), params);
+        log.info("Sending message : {}", msg);
+        session.getRemote().sendString(msg);
     }
 }
