@@ -43,36 +43,87 @@ public final class Revolte {
         this.timer = new Timer();
 
         // TODO game functionnalities are currently disabled
-        //startJoinPhase();
+        nextPhase(Phase.JOIN);
     }
 
     public void nextPhase(Phase phase) {
         this.phase = phase;
         this.phaseEnd = Instant.now().plus(phasesDuration.get(phase));
+        if (phase == Phase.DAY)
+            ++day;
+        log.info("Game {} : start phase {}, day {}", threadId, phase, day);
         this.timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 // End of phase
+                switch (phase) {
+                    case JOIN:
+                        distributeRoles();
+                        break;
+                    case DAY:
+                        markVotedPlayer();
+                    case NIGHT:
+                    case NIGHT_END:
+                        killPlayers();
+                        resetAttributes();
+                        break;
+                    default:
+                        break;
+                }
                 nextPhase(phase.next());
-            }
-        }, Date.from(phaseEnd));
-    }
-
-    public void startJoinPhase() {
-        this.phase = Phase.JOIN;
-        this.phaseEnd = Instant.now().plus(phasesDuration.get(phase));
-        this.timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                // End of enroll phase
-                distributeRoles();
-                nextPhase(Phase.JOIN.next());
             }
         }, Date.from(phaseEnd));
     }
 
     public void addPlayer(Player player) {
         this.players.put(player.getPsid(), player);
+    }
+
+    public void killPlayers() {
+        for (Player p : players.values())
+            if (p.isMarkedForDeath() && !p.isProtected())
+                p.addHealth(-1);
+    }
+
+    public void resetAttributes() {
+        for (Player p : players.values()) {
+            p.setProtected(false);
+            p.setVote(null);
+        }
+    }
+
+    public void markVotedPlayer() {
+        Map<String, Integer> votes = new HashMap<>();
+        String kingVote = null;
+        for (Player p : players.values()) {
+            if (p.getVote() != null) {
+                if (votes.containsKey(p.getVote())) {
+                    votes.put(p.getVote(), votes.get(p.getVote()) + 1);
+                } else {
+                    votes.put(p.getVote(), 1);
+                }
+                if (p.getRole() == Role.KING)
+                    kingVote = p.getVote();
+            }
+        }
+        int max = 0;
+        List<String> marked = new ArrayList<>();
+        for (Map.Entry<String, Integer> e : votes.entrySet()) {
+            if (e.getValue() > max) {
+                marked.clear();
+                marked.add(e.getKey());
+                max = e.getValue();
+            } else if (e.getValue() == max) {
+                marked.add(e.getKey());
+            }
+        }
+        if (marked.size() == 1) {
+            players.get(marked.get(0)).setMarkedForDeath(true);
+        } else if (marked.contains(kingVote)) {
+            players.get(kingVote).setMarkedForDeath(true);
+        } else {
+            log.error("Can't conclude on vote !");
+        }
     }
 
     public void distributeRoles() {

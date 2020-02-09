@@ -88,7 +88,7 @@ public final class App {
                 log.info(e.toString());
                 // If this is the start of a conversation
                 if (e.getEventType() == Event.EventType.POSTBACK && e.getPostback().getPayload().equals("Commencer")) {
-                    Messenger.postMessage("Invoque moi dans une conversation de groupe pour commencer !", e.getSender());
+                    Messenger.sendMessageSimple("Invoque moi dans une conversation de groupe pour commencer !", e.getSender());
                 }
                 Messenger.postSenderAction(Messenger.SenderAction.MARK_SEEN, e.getSender());
             }

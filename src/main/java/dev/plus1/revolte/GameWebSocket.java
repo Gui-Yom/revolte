@@ -1,5 +1,7 @@
 package dev.plus1.revolte;
 
+import dev.plus1.messenger.Messenger;
+import dev.plus1.messenger.sendapi.GenericTemplateMessage;
 import dev.plus1.revolte.data.NewGame;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
@@ -34,7 +36,7 @@ public class GameWebSocket {
         }
         log.info("Websocket client connected : {} + {}",
                 session.getRemoteAddress(),
-                session.getUpgradeRequest().getParameterMap().get("viewerId").get(0));
+                getSenderId(session));
         sessions.put(session.getUpgradeRequest().getParameterMap().get("viewerId").get(0), session);
     }
 
@@ -80,6 +82,17 @@ public class GameWebSocket {
                 } else {
                     if (data.getDeveloperKey().equals("69420")) {
                         App.getGames().put(data.getThreadId(), new Revolte(data.getThreadId(), data.getPhasesDuration()));
+                        Messenger.sendGenericTemplateMessage(
+                                new GenericTemplateMessage(
+                                        data.getThreadId(),
+                                        getSenderId(session) + " a créé une partie",
+                                        "https://revolte.netlify.com/favicon.ico",
+                                        "vous pouvez rejoindre la partie",
+                                        "https://revolte.netlify.com",
+                                        "Rejoindre",
+                                        "tall"
+                                )
+                        );
                         sendResponse(session, params[0], "ok");
                     } else {
                         sendResponse(session, params[0], "error", "Mauvaise clé développeur");
@@ -91,6 +104,17 @@ public class GameWebSocket {
                 if (game != null)
                     sendResponse(session, params[0], App.gson.toJson(game));
                 else
+                    sendResponse(session, params[0], "error", "no_game_with_this_id");
+                break;
+            case "dayVote!":
+                game = App.getGames().get(params[2]);
+                if (game != null) {
+                    game.getPlayers().get(getSenderId(session)).setVote(params[3]);
+                    if (game.getPlayers().containsKey(params[3]))
+                        sendResponse(session, params[0], "ok");
+                    else
+                        sendResponse(session, params[0], "error", "no_player_with_this_id");
+                } else
                     sendResponse(session, params[0], "error", "no_game_with_this_id");
                 break;
         }
@@ -113,5 +137,9 @@ public class GameWebSocket {
         String msg = type + SEP + String.join(String.valueOf(SEP), params);
         log.info("Sending message : {}", msg);
         session.getRemote().sendString(msg);
+    }
+
+    private String getSenderId(Session session) {
+        return session.getUpgradeRequest().getParameterMap().get("viewerId").get(0);
     }
 }

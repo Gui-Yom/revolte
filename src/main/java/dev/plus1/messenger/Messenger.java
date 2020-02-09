@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import dev.plus1.messenger.sendapi.GenericTemplateMessage;
 import dev.plus1.messenger.webhook.*;
 import lombok.NonNull;
 import okhttp3.MediaType;
@@ -29,6 +30,7 @@ public final class Messenger {
                        .registerTypeAdapter(Message.class, Message.getDeserializer())
                        .registerTypeAdapter(Postback.class, Postback.getDeserializer())
                        .registerTypeAdapter(Attachment.class, Attachment.getDeserializer())
+                       .registerTypeAdapter(GenericTemplateMessage.class, GenericTemplateMessage.getSerializer())
                        .create();
     }
 
@@ -77,12 +79,25 @@ public final class Messenger {
         return gson.toJson(object);
     }
 
-    public static void postMessage(String text, Person recipient) {
+    public static void sendMessageSimple(String text, Person recipient) {
 
         try {
             http.newCall(new Request.Builder()
                                  .url("https://graph.facebook.com/v5.0/me/messages?access_token=" + PAGE_ACCESS_TOKEN)
                                  .post(RequestBody.create(getMessagePost(text, recipient),
+                                         MediaType.get("application/json; charset=utf-8")))
+                                 .build())
+                    .execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void sendGenericTemplateMessage(GenericTemplateMessage gtm) {
+        try {
+            http.newCall(new Request.Builder()
+                                 .url("https://graph.facebook.com/v5.0/me/messages?access_token=" + PAGE_ACCESS_TOKEN)
+                                 .post(RequestBody.create(gson.toJson(gtm),
                                          MediaType.get("application/json; charset=utf-8")))
                                  .build())
                     .execute();

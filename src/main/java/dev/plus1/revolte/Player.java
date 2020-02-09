@@ -9,8 +9,14 @@ public class Player {
 
     private String psid;
     private int health;
-    private Role role;
-    private long vote;
+    private Role role = null;
+    /**
+     * The player that is voted to die by this player
+     */
+    private String vote;
+    private boolean markedForDeath = false;
+    private boolean isProtected = false;
+    private boolean isRolePublic = false;
 
     public Player(String psid) {
         this.psid = psid;
@@ -19,5 +25,9 @@ public class Player {
 
     public void addHealth(int q) {
         this.health += q;
+    }
+
+    public boolean isDead() {
+        return health == 0;
     }
 }
